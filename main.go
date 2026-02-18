@@ -1,11 +1,11 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jaxkodex/go-gin-template/src/api"
 	"github.com/jaxkodex/go-gin-template/src/database"
 	"github.com/jaxkodex/go-gin-template/src/routes"
 	"github.com/joho/godotenv"
@@ -21,13 +21,16 @@ func main() {
 	if err := database.Connect(); err != nil {
 		log.Fatal(err)
 	}
-	defer database.DB.Close(context.Background())
+	defer database.DB.Close()
 
 	// Initialize Gin router
 	r := gin.Default()
 
 	// Register all routes
 	routes.RegisterRoutes(r)
+
+	// Register generated OpenAPI routes
+	api.RegisterHandlers(r, api.NewServer())
 
 	// Start server
 	port := os.Getenv("SERVER_PORT")

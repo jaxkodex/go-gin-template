@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var DB *pgx.Conn
+var DB *pgxpool.Pool
 
 func Connect() error {
 	dsn := fmt.Sprintf(
@@ -21,14 +22,34 @@ func Connect() error {
 		os.Getenv("DB_NAME"),
 	)
 
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return fmt.Errorf("unable to parse database config: %w", err)
+	}
+
+	config.MaxConns = int32(getEnvInt("DB_MAX_CONNS", 10))
+	config.MinConns = int32(getEnvInt("DB_MIN_CONNS", 2))
+	config.MaxConnLifetime = 1 * time.Hour
+	config.MaxConnIdleTime = 30 * time.Minute
+	config.HealthCheckPeriod = 1 * time.Minute
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	conn, err := pgx.Connect(ctx, dsn)
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return fmt.Errorf("database connection failed: %w", err)
 	}
 
-	DB = conn
+	DB = pool
 	return nil
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	if v := os.Getenv(key); v != "" {
+		if i, err := strconv.Atoi(v); err == nil {
+			return i
+		}
+	}
+	return defaultVal
 }
