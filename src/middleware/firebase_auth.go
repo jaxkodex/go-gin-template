@@ -52,12 +52,12 @@ func newFirebaseVerifier(cfg *config.Config) (*firebaseVerifier, error) {
 func (v *firebaseVerifier) verify(c *gin.Context) (ok bool, userID string, claims map[string]interface{}, err error) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		return false, "", nil, errors.New("missing Authorization header")
+		return false, "", nil, errors.New("unauthorized")
 	}
 
 	parts := strings.SplitN(authHeader, " ", 2)
 	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-		return false, "", nil, errors.New("invalid Authorization header format")
+		return false, "", nil, errors.New("unauthorized")
 	}
 
 	token, err := v.client.VerifyIDToken(c.Request.Context(), parts[1])

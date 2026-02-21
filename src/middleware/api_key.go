@@ -24,10 +24,10 @@ func newAPIKeyVerifier(cfg *config.Config) *apiKeyVerifier {
 func (v *apiKeyVerifier) verify(c *gin.Context) (ok bool, keyID string, err error) {
 	key := c.GetHeader("X-API-Key")
 	if key == "" {
-		return false, "", errors.New("missing X-API-Key header")
+		return false, "", errors.New("unauthorized")
 	}
 	if _, found := v.validKeys[key]; !found {
-		return false, "", errors.New("invalid API key")
+		return false, "", errors.New("unauthorized")
 	}
 	return true, key, nil
 }
