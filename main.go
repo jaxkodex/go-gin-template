@@ -2,40 +2,47 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jaxkodex/go-gin-template/src/api"
+	"github.com/jaxkodex/go-gin-template/src/config"
 	"github.com/jaxkodex/go-gin-template/src/database"
+	"github.com/jaxkodex/go-gin-template/src/middleware"
 	"github.com/jaxkodex/go-gin-template/src/routes"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load environment variables
+	// Load environment variables from .env file if present.
+	// A missing file is not fatal — production containers rely on real env vars.
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Warning: .env file not found, relying on environment variables")
 	}
 
-	// Connect to PostgreSQL
+	// Load typed application config.
+	cfg := config.Load()
+
+	// Connect to PostgreSQL.
 	if err := database.Connect(); err != nil {
 		log.Fatal(err)
 	}
 	defer database.DB.Close()
 
-	// Initialize Gin router
+	// Initialize authentication middleware.
+	authMiddleware, err := middleware.NewAuth(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize auth middleware: %v", err)
+	}
+
+	// Initialize Gin router.
 	r := gin.Default()
 
-	// Register all routes
-	routes.RegisterRoutes(r)
+	// Register all routes.
+	routes.RegisterRoutes(r, authMiddleware)
 
-	// Register generated OpenAPI routes
+	// Register generated OpenAPI routes.
 	api.RegisterHandlers(r, api.NewServer())
 
-	// Start server
-	port := os.Getenv("SERVER_PORT")
-	if port == "" {
-		port = "8000"
-	}
-	log.Fatal(r.Run(":" + port))
+	// Start server.
+	log.Fatal(r.Run(":" + cfg.ServerPort))
 }
