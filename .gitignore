@@ -35,3 +35,6 @@ bin/
 
 # Generated API code
 src/api/api.gen.go
+
+# golangci-lint SARIF output (CI artifact, not for version control)
+golangci-lint.sarif
