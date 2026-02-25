@@ -39,4 +39,8 @@ else
 	@echo "Skipping API generation: url is not set"
 endif
 
-.PHONY: build run migrate-up migrate-down migrate-status migrate-create generate-api
+# Run golangci-lint static analysis
+lint:
+	golangci-lint run ./...
+
+.PHONY: build run migrate-up migrate-down migrate-status migrate-create generate-api lint
