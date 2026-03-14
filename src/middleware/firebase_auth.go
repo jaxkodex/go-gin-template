@@ -27,9 +27,9 @@ func newFirebaseVerifier(cfg *config.Config) (*firebaseVerifier, error) {
 
 	switch {
 	case cfg.FirebaseCredentialsFile != "":
-		opts = append(opts, option.WithCredentialsFile(cfg.FirebaseCredentialsFile))
+		opts = append(opts, option.WithAuthCredentialsFile(option.ServiceAccount, cfg.FirebaseCredentialsFile))
 	case cfg.FirebaseCredentialsJSON != "":
-		opts = append(opts, option.WithCredentialsJSON([]byte(cfg.FirebaseCredentialsJSON)))
+		opts = append(opts, option.WithAuthCredentialsJSON(option.ServiceAccount, []byte(cfg.FirebaseCredentialsJSON)))
 	}
 	// No opts → Firebase will use Application Default Credentials automatically.
 
